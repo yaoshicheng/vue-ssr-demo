@@ -1,4 +1,7 @@
 const path = require('path');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
+
+const isProduction = false;
 
 module.exports = {
   resolve: {
@@ -13,10 +16,18 @@ module.exports = {
   module: {
     rules: [{
       test: /\.vue$/,
-      loader: 'vue-loader'
+      loader: 'vue-loader',
+      options: {
+        // enable CSS extraction
+        extractCSS: isProduction
+      }
     }, {
       test: /\.js$/,
       loader: 'babel-loader'
     }]
-  }
+  },
+  plugins: isProduction
+      // 确保添加了此插件！
+      ? [new ExtractTextPlugin({ filename: 'common.[chunkhash].css' })]
+      : []
 };
