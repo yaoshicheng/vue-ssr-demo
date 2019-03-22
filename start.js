@@ -1,8 +1,14 @@
 const fs = require('fs');
+const LRU = require('lru-cache')
 const path = require('path');
 const express = require('express');
 const server = express();
 server.use(express.static('dist'));
+
+const microCache = LRU({
+  max: 100,
+  maxAge: 1000 // 重要提示：条目在 1 秒后过期。
+})
 
 const bundle = fs.readFileSync(path.resolve(__dirname, 'dist/server.js'), 'utf-8');
 const renderer = require('vue-server-renderer').createBundleRenderer(bundle, {
@@ -11,6 +17,10 @@ const renderer = require('vue-server-renderer').createBundleRenderer(bundle, {
 
 
 server.get('*', (req, res) => {
+  const hit = microCache.get(req.url)
+  if (hit) {
+    return res.end(hit)
+  }
   renderer.renderToString((err, html) => {
     // console.log(html)
     if (err) {
